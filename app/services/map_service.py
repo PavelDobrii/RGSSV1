@@ -29,11 +29,19 @@ class MapService:
             params["waypoints"] = f"optimize:true|{waypoints}"
         self.logger.info("map.request", mode=gmode, waypoints=len(points))
         async with httpx.AsyncClient(timeout=6.0) as client:
-            resp = await client.get(self.base_url, params=params)
-            resp.raise_for_status()
+            try:
+                resp = await client.get(self.base_url, params=params)
+                resp.raise_for_status()
+            except httpx.HTTPError as exc:  # pragma: no cover - network errors
+                self.logger.error("map.http_error", error=str(exc))
+                raise RuntimeError(f"directions http error: {exc}") from exc
             data = resp.json()
         if data.get("status") != "OK":
-            raise RuntimeError("directions error")
+            status = data.get("status", "unknown")
+            error_message = data.get("error_message", "")
+            self.logger.error("map.api_error", status=status, error_message=error_message)
+            details = f"{status}: {error_message}" if error_message else status
+            raise RuntimeError(f"directions error: {details}")
         route = data["routes"][0]
         legs = []
         total_distance = 0
