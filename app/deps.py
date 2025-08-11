@@ -1,4 +1,7 @@
+from functools import lru_cache
+
 from fastapi import Depends, Header, HTTPException, status
+
 from .settings import settings
 from .services.route_service import RouteService
 from .services.tts_service import TTSService
@@ -29,7 +32,11 @@ def get_map_service(settings=Depends(get_settings)) -> MapService:
     return MapService(api_key=settings.google_maps_api_key)
 
 
-def get_tts_service(provider: TTSProvider = Depends(get_tts_provider)) -> TTSService:
+@lru_cache()
+def get_tts_service() -> TTSService:
+    """Return a single :class:`TTSService` instance for all requests."""
+
+    provider = get_tts_provider()
     return TTSService(provider)
 
 

@@ -1,10 +1,19 @@
+import sys
+from pathlib import Path
+
 import pytest
 from httpx import AsyncClient
+
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+
+from app.deps import get_tts_service
 from app.main import app
 
 
 @pytest.mark.asyncio
 async def test_generate_route(monkeypatch):
+    get_tts_service.cache_clear()
+
     async def fake_build_polyline(self, points, mode):
         return {
             "polyline": "abc",
@@ -40,9 +49,18 @@ async def test_generate_route(monkeypatch):
         "need_audio": True,
     }
     async with AsyncClient(app=app, base_url="http://test") as ac:
-        resp = await ac.post("/api/v1/routes/generate", json=payload, headers={"X-API-Key": "devkey"})
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["polyline"] == "abc"
-    assert len(data["stops"]) == 2
-    assert data["stops"][0]["audio_url"]
+        resp = await ac.post(
+            "/api/v1/routes/generate",
+            json=payload,
+            headers={"X-API-Key": "devkey"},
+        )
+        assert resp.status_code == 200
+
+        data = resp.json()
+        assert data["polyline"] == "abc"
+        assert len(data["stops"]) == 2
+        audio_url = data["stops"][0]["audio_url"]
+
+        audio_resp = await ac.get(audio_url)
+        assert audio_resp.status_code == 200
+        assert await audio_resp.aread() == b"mp3"
