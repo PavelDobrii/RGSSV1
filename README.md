@@ -2,6 +2,25 @@
 
 FastAPI backend for generating city routes and synthesizing audio stories.
 
+## Architecture Overview
+
+- **Routes**: `/api/v1/routes` and `/api/v1/tts` defined in `app/routers`.
+- **Services**: business logic in `app/services` handles route generation, text synthesis and caching.
+- **Integrations**: adapters in `app/integrations` for third-party content and TTS providers.
+- **Workflow**: generate a polyline via Google Directions → enrich with stories → optionally synthesize audio.
+
+## Directory Structure
+
+```
+app/
+  main.py            # application entry point
+  routers/           # FastAPI routers
+  services/          # route, TTS and map services
+  integrations/      # external API adapters
+  utils/             # helpers (cache, geometry)
+tests/               # pytest test suite
+```
+
 ## Setup
 
 ```bash
