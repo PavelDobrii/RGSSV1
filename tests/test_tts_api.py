@@ -1,10 +1,19 @@
+import sys
+from pathlib import Path
+
 import pytest
 from httpx import AsyncClient
+
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+
+from app.deps import get_tts_service
 from app.main import app
 
 
 @pytest.mark.asyncio
 async def test_tts_synthesize(monkeypatch):
+    get_tts_service.cache_clear()
+
     def fake_tts(self, **kwargs):
         return b"mp3"
 
