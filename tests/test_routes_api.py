@@ -1,6 +1,7 @@
 import pytest
 from httpx import AsyncClient
 from app.main import app
+from app.schemas import TransportMode
 
 
 @pytest.mark.asyncio
@@ -34,7 +35,7 @@ async def test_generate_route(monkeypatch):
         "city": "Test",
         "start": {"lat": 1.0, "lng": 2.0},
         "duration_min": 120,
-        "transport_mode": "foot",
+        "transport_mode": TransportMode.foot.value,
         "interest_tags": ["history"],
         "language": "en",
         "need_audio": True,

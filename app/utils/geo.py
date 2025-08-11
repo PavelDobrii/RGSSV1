@@ -1,16 +1,16 @@
 import math
 
+from ..schemas import TransportMode
+
 MODE_MAP = {
-    "foot": "walking",
-    "bike": "bicycling",
-    "car": "driving",
-    "public": "transit",
+    TransportMode.foot: "walking",
+    TransportMode.bike: "bicycling",
+    TransportMode.car: "driving",
+    TransportMode.public: "transit",
 }
 
 
-def normalize_mode(mode: str) -> str:
-    if mode not in MODE_MAP:
-        raise ValueError("unsupported mode")
+def normalize_mode(mode: TransportMode) -> str:
     return MODE_MAP[mode]
 
 

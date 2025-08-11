@@ -1,3 +1,6 @@
+from ..schemas import TransportMode
+
+
 class ContentAI:
     def propose_route(
         self,
@@ -5,7 +8,7 @@ class ContentAI:
         city: str,
         start: tuple[float, float] | None,
         duration_min: int,
-        transport_mode: str,
+        transport_mode: TransportMode,
         interest_tags: list[str],
     ) -> list[dict]:
         """Возвращает список точек: [{id, name, lat, lng, poi_type, draft_text}]"""

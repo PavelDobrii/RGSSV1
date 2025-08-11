@@ -1,5 +1,13 @@
-from pydantic import BaseModel, Field, validator
+from enum import Enum
+from pydantic import BaseModel, Field
 from typing import List, Optional
+
+
+class TransportMode(str, Enum):
+    foot = "foot"
+    bike = "bike"
+    car = "car"
+    public = "public"
 
 class Point(BaseModel):
     lat: float
@@ -9,16 +17,10 @@ class RouteGenerateRequest(BaseModel):
     city: str
     start: Optional[Point] = None
     duration_min: int = Field(ge=30, le=240)
-    transport_mode: str
+    transport_mode: TransportMode
     interest_tags: List[str] = Field(min_items=1, max_items=3)
     language: str | None = None
     need_audio: bool = False
-
-    @validator("transport_mode")
-    def check_mode(cls, v):
-        if v not in {"foot", "bike", "car", "public"}:
-            raise ValueError("unsupported mode")
-        return v
 
 class Stop(BaseModel):
     poi_id: str
@@ -33,7 +35,7 @@ class RouteResponse(BaseModel):
     city: str
     polyline: str
     duration_min: int
-    transport_mode: str
+    transport_mode: TransportMode
     stops: List[Stop]
 
 class TTSSynthesizeRequest(BaseModel):
