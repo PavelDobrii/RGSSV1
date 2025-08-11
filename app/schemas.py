@@ -18,7 +18,7 @@ class RouteGenerateRequest(BaseModel):
     start: Optional[Point] = None
     duration_min: int = Field(ge=30, le=240)
     transport_mode: TransportMode
-    interest_tags: List[str] = Field(min_items=1, max_items=3)
+    interest_tags: List[str] = Field(min_length=1, max_length=3)
     language: str | None = None
     need_audio: bool = False
 

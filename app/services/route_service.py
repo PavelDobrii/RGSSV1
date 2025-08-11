@@ -1,6 +1,9 @@
+import asyncio
 import uuid
 from typing import List, Tuple
+
 import structlog
+
 from ..integrations.content_ai import ContentAI
 from ..schemas import TransportMode
 from ..services.map_service import MapService
@@ -57,8 +60,17 @@ class RouteService:
                 break
             story_text = poi.get("draft_text", "")
             if need_audio:
-                story_text = self.content_ai.finalize_story(poi_id=poi["id"], draft_text=story_text, language=language)
-                audio = self.tts_service.synthesize_story(text=story_text, language=language)
+                story_text = await asyncio.to_thread(
+                    self.content_ai.finalize_story,
+                    poi_id=poi["id"],
+                    draft_text=story_text,
+                    language=language,
+                )
+                audio = await asyncio.to_thread(
+                    self.tts_service.synthesize_story,
+                    text=story_text,
+                    language=language,
+                )
                 self.tts_service.set_cached(route_id, poi["id"], audio)
                 audio_url = f"/api/v1/tts/by-id?rid={route_id}&poi={poi['id']}"
             else:
