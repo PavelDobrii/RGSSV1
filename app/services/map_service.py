@@ -1,5 +1,6 @@
 import httpx
 from typing import List, Tuple
+from ..schemas import TransportMode
 from ..utils.geo import normalize_mode
 
 
@@ -9,7 +10,7 @@ class MapService:
     def __init__(self, *, api_key: str):
         self.api_key = api_key
 
-    async def build_polyline(self, points: List[Tuple[float, float]], mode: str) -> dict:
+    async def build_polyline(self, points: List[Tuple[float, float]], mode: TransportMode) -> dict:
         if len(points) < 2:
             raise ValueError("at least two points required")
         gmode = normalize_mode(mode)

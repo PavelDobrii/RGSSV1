@@ -1,6 +1,7 @@
 import uuid
 from typing import List, Tuple
 from ..integrations.content_ai import ContentAI
+from ..schemas import TransportMode
 from ..services.map_service import MapService
 from ..services.tts_service import TTSService
 
@@ -17,7 +18,7 @@ class RouteService:
         city: str,
         start: Tuple[float, float] | None,
         duration_min: int,
-        transport_mode: str,
+        transport_mode: TransportMode,
         interest_tags: List[str],
         language: str,
         need_audio: bool,
@@ -30,7 +31,14 @@ class RouteService:
             interest_tags=interest_tags,
         )
         if not pois:
-            return {"route_id": str(uuid.uuid4()), "city": city, "polyline": "", "duration_min": 0, "transport_mode": transport_mode, "stops": []}
+            return {
+                "route_id": str(uuid.uuid4()),
+                "city": city,
+                "polyline": "",
+                "duration_min": 0,
+                "transport_mode": transport_mode,
+                "stops": [],
+            }
         points = [(p["lat"], p["lng"]) for p in pois]
         map_data = await self.map_service.build_polyline(points, transport_mode)
         route_id = str(uuid.uuid4())
