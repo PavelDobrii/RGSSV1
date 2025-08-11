@@ -14,8 +14,10 @@ async def get_settings():
     return settings
 
 
-def api_key_auth(x_api_key: str | None = Header(default=None)):
-    if settings.api_key and x_api_key != settings.api_key:
+def api_key_auth(x_api_key: str = Header(...)):
+    if not settings.api_key:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="api key not configured")
+    if x_api_key != settings.api_key:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid api key")
     return x_api_key
 

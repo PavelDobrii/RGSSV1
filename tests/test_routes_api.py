@@ -1,6 +1,8 @@
 import sys
 from pathlib import Path
 
+import asyncio
+
 import pytest
 from httpx import AsyncClient
 
@@ -11,8 +13,7 @@ from app.main import app
 from app.schemas import TransportMode
 
 
-@pytest.mark.asyncio
-async def test_generate_route(monkeypatch):
+def test_generate_route(monkeypatch):
     get_tts_service.cache_clear()
 
     async def fake_build_polyline(self, points, mode):
@@ -49,19 +50,22 @@ async def test_generate_route(monkeypatch):
         "language": "en",
         "need_audio": True,
     }
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        resp = await ac.post(
-            "/api/v1/routes/generate",
-            json=payload,
-            headers={"X-API-Key": "devkey"},
-        )
-        assert resp.status_code == 200
+    async def run_test():
+        async with AsyncClient(app=app, base_url="http://test") as ac:
+            resp = await ac.post(
+                "/api/v1/routes/generate",
+                json=payload,
+                headers={"X-API-Key": "devkey"},
+            )
+            assert resp.status_code == 200
 
-        data = resp.json()
-        assert data["polyline"] == "abc"
-        assert len(data["stops"]) == 2
-        audio_url = data["stops"][0]["audio_url"]
+            data = resp.json()
+            assert data["polyline"] == "abc"
+            assert len(data["stops"]) == 2
+            audio_url = data["stops"][0]["audio_url"]
 
-        audio_resp = await ac.get(audio_url)
-        assert audio_resp.status_code == 200
-        assert await audio_resp.aread() == b"mp3"
+            audio_resp = await ac.get(audio_url)
+            assert audio_resp.status_code == 200
+            assert await audio_resp.aread() == b"mp3"
+
+    asyncio.run(run_test())
