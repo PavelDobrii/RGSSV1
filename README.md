@@ -17,6 +17,19 @@ cp .env.example .env
 make dev
 ```
 
+## Logging
+
+Logs use [structlog](https://www.structlog.org/) and can be customized via environment variables:
+
+- `LOG_LEVEL` – set the log verbosity (e.g. `DEBUG`, `INFO`). Default is `INFO`.
+- `LOG_FORMAT` – choose `JSON` for machine readable logs (default) or `PLAIN` for key-value output.
+
+Example:
+
+```bash
+LOG_LEVEL=DEBUG LOG_FORMAT=plain make dev
+```
+
 ## Test
 
 ```bash

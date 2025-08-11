@@ -1,5 +1,6 @@
 import uuid
 from typing import List, Tuple
+import structlog
 from ..integrations.content_ai import ContentAI
 from ..schemas import TransportMode
 from ..services.map_service import MapService
@@ -11,6 +12,7 @@ class RouteService:
         self.content_ai = content_ai
         self.map_service = map_service
         self.tts_service = tts_service
+        self.logger = structlog.get_logger(__name__)
 
     async def generate_route(
         self,
@@ -23,6 +25,7 @@ class RouteService:
         language: str,
         need_audio: bool,
     ) -> dict:
+        self.logger.info("route.generate", city=city, transport_mode=transport_mode)
         pois = self.content_ai.propose_route(
             city=city,
             start=start,
@@ -31,7 +34,7 @@ class RouteService:
             interest_tags=interest_tags,
         )
         if not pois:
-            return {
+            route = {
                 "route_id": str(uuid.uuid4()),
                 "city": city,
                 "polyline": "",
@@ -39,9 +42,12 @@ class RouteService:
                 "transport_mode": transport_mode,
                 "stops": [],
             }
+            self.logger.info("route.empty", route_id=route["route_id"], city=city)
+            return route
         points = [(p["lat"], p["lng"]) for p in pois]
         map_data = await self.map_service.build_polyline(points, transport_mode)
         route_id = str(uuid.uuid4())
+        self.logger.info("route.created", route_id=route_id, stops=len(pois))
         stops = []
         duration_acc = 0
         for idx, poi in enumerate(pois):
@@ -65,7 +71,7 @@ class RouteService:
                 "story_text_md": story_text if need_audio else None,
                 "audio_url": audio_url,
             })
-        return {
+        result = {
             "route_id": route_id,
             "city": city,
             "polyline": map_data["polyline"],
@@ -73,3 +79,5 @@ class RouteService:
             "transport_mode": transport_mode,
             "stops": stops,
         }
+        self.logger.info("route.complete", route_id=route_id, stops=len(stops))
+        return result

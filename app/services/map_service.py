@@ -1,5 +1,6 @@
 import httpx
 from typing import List, Tuple
+import structlog
 from ..schemas import TransportMode
 from ..utils.geo import normalize_mode
 
@@ -9,6 +10,7 @@ class MapService:
 
     def __init__(self, *, api_key: str):
         self.api_key = api_key
+        self.logger = structlog.get_logger(__name__)
 
     async def build_polyline(self, points: List[Tuple[float, float]], mode: TransportMode) -> dict:
         if len(points) < 2:
@@ -25,6 +27,7 @@ class MapService:
         }
         if waypoints:
             params["waypoints"] = f"optimize:true|{waypoints}"
+        self.logger.info("map.request", mode=gmode, waypoints=len(points))
         async with httpx.AsyncClient(timeout=6.0) as client:
             resp = await client.get(self.base_url, params=params)
             resp.raise_for_status()
@@ -41,6 +44,11 @@ class MapService:
             legs.append({"distance_m": distance, "duration_s": duration})
             total_distance += distance
             total_duration += duration
+        self.logger.info(
+            "map.response",
+            total_distance_m=total_distance,
+            total_duration_s=total_duration,
+        )
         return {
             "polyline": route["overview_polyline"]["points"],
             "legs": legs,
